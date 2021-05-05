@@ -1,6 +1,5 @@
 defmodule YailWeb.AuthRequiredPlug do
   require Logger
-  import Plug.Conn
 
   def init(options) do
     options

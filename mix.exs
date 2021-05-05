@@ -41,6 +41,7 @@ defmodule Yail.MixProject do
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},
+      {:git_hooks, "~> 0.6.2", only: [:test, :dev], runtime: false},
       {:phoenix_live_dashboard, "~> 0.4"},
       {:telemetry_metrics, "~> 0.4"},
       {:telemetry_poller, "~> 0.4"},

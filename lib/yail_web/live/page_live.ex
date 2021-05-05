@@ -1,4 +1,10 @@
 defmodule YailWeb.PageLive do
+  @moduledoc """
+  This WebView is the main control page.
+
+  It controlls the music player, and lets users add music to the queue.
+  """
+
   use YailWeb, :live_view
   require Logger
 
@@ -33,7 +39,7 @@ defmodule YailWeb.PageLive do
   def handle_event("play", _params, socket) do
     socket =
       case Spotify.Player.play(get_credentials(socket)) do
-        :ok -> socket = assign(socket, :is_playing, true)
+        :ok -> assign(socket, :is_playing, true)
         _ -> socket
       end
 
@@ -44,7 +50,7 @@ defmodule YailWeb.PageLive do
   def handle_event("pause", _params, socket) do
     socket =
       case Spotify.Player.pause(get_credentials(socket)) do
-        :ok -> socket = assign(socket, :is_playing, false)
+        :ok -> assign(socket, :is_playing, false)
         _ -> socket
       end
 

@@ -1,4 +1,5 @@
 defmodule YailWeb.PageLiveTest do
+  """
   use YailWeb.ConnCase
 
   import Phoenix.LiveViewTest
@@ -8,4 +9,5 @@ defmodule YailWeb.PageLiveTest do
     assert disconnected_html =~ "Welcome to Phoenix!"
     assert render(page_live) =~ "Welcome to Phoenix!"
   end
+  """
 end
