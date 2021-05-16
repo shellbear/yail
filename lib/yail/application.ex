@@ -12,9 +12,10 @@ defmodule Yail.Application do
       # Start the PubSub system
       {Phoenix.PubSub, name: Yail.PubSub},
       # Start the Endpoint (http/https)
-      YailWeb.Endpoint
+      YailWeb.Endpoint,
       # Start a worker by calling: Yail.Worker.start_link(arg)
       # {Yail.Worker, arg}
+      Yail.Session.Session
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

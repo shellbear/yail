@@ -1,6 +1,12 @@
 /* This file is for your main application css. */
 @import "./phoenix.css";
 
+/* Tailwind.css imports */
+@import "tailwindcss";
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
 /* LiveView specific classes for your customizations */
 .phx-no-feedback.invalid-feedback,
 .phx-no-feedback .invalid-feedback {

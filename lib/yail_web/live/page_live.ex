@@ -6,6 +6,7 @@ defmodule YailWeb.PageLive do
   """
 
   use YailWeb, :live_view
+  alias Yail.Session.Session
   require Logger
 
   @playback_update_interval :timer.seconds(1)
@@ -22,14 +23,20 @@ defmodule YailWeb.PageLive do
       :timer.send_interval(@playback_update_interval, self(), :update)
     end
 
-    Logger.debug("CONNECTED: #{connected?(socket)}")
+    session_id = Nanoid.generate(12)
+
+    Session.put(session_id, %{
+      access_token: access_token,
+      refresh_token: refresh_token
+    })
 
     assigns = %{
+      session_id: session_id,
       is_playing: false,
       track_name: "",
       track_image: "",
-      refresh_token: refresh_token,
-      access_token: access_token
+      query: "",
+      results: []
     }
 
     {:ok, assign(socket, assigns)}
@@ -72,14 +79,36 @@ defmodule YailWeb.PageLive do
   end
 
   @impl true
-  def handle_info(:update, socket) do
-    Logger.info("Processing...")
+  def handle_event("search", %{"q" => query}, socket) do
+    socket =
+      socket
+      |> search(query, :track)
+      |> assign(:query, query)
 
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("add", %{"uri" => uri}, socket) do
+    case Spotify.Player.play(get_credentials(socket), uris: [uri]) do
+      :ok -> Logger.info("Playing: #{uri}")
+    end
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info(:update, socket) do
     socket =
       case Spotify.Player.get_current_playback(get_credentials(socket)) do
+        {:ok, %{"error" => %{"status" => 401}}} ->
+          socket
+          |> put_flash(:warn, "Token expired")
+          |> redirect(to: "/auth/spotify")
+
         {:ok, playback} ->
           images = playback.item.album["images"]
-          image = Enum.find(images, &(&1["height"] == 300)) || images[0]
+          image = Enum.find(images, &(&1["height"] == 300)) || hd(images)
 
           assign(socket, %{
             is_playing: playback.is_playing,
@@ -98,9 +127,61 @@ defmodule YailWeb.PageLive do
     {:noreply, socket}
   end
 
-  def get_credentials(socket),
-    do: %Spotify.Credentials{
-      access_token: socket.assigns.access_token,
-      refresh_token: socket.assigns.refresh_token
+  @spec search(
+          atom
+          | %{
+              :assigns =>
+                atom | %{:access_token => any, :refresh_token => any, optional(any) => any},
+              optional(any) => any
+            },
+          any,
+          :track
+        ) ::
+          atom
+          | %{
+              :assigns =>
+                atom | %{:access_token => any, :refresh_token => any, optional(any) => any},
+              optional(any) => any
+            }
+
+  def search(socket, query, :track) do
+    credentials = get_credentials(socket)
+
+    socket =
+      case Spotify.Search.query(credentials, q: query, type: "track") do
+        {:ok, %{:items => items}} ->
+          items =
+            items
+            |> Enum.filter(&(&1.type == "track"))
+            |> Enum.map(fn item ->
+              images = item.album["images"]
+              image = Enum.find(images, &(&1["height"] == 64)) || hd(images)
+
+              %{
+                :artist => hd(item.artists)["name"],
+                :preview => image["url"],
+                :name => item.name,
+                :uri => item.uri
+              }
+            end)
+
+          assign(socket, :results, items)
+
+        {:error, reason} ->
+          Logger.error("Failed to search song: #{reason}")
+          socket
+      end
+
+    socket
+  end
+
+  def get_credentials(socket) do
+    session_id = socket.assigns.session_id
+    %{:access_token => access_token, :refresh_token => refresh_token} = Session.get(session_id)
+
+    %Spotify.Credentials{
+      access_token: access_token,
+      refresh_token: refresh_token
     }
+  end
 end

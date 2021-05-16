@@ -4,7 +4,6 @@
 
   <h2>Currently playing: <%= @track_name %></h2>
   <img src="<%= @track_image %>" width="300px" height="300px">
-  <h2>Is playing: <%= @is_playing %></h2>
   <button phx-click="previous">Previous</button>
   <button phx-click="next">Next</button>
   <%= if @is_playing do %>
@@ -12,4 +11,23 @@
   <% else %>
     <button phx-click="play">Play</button>
   <% end %>
+
+  <div class="grid grid-cols-6 gap-4 justify-items-stretch	">
+    <%= for %{:name => name, :artist => artist, :uri => uri, :preview => preview} <- @results do %>
+      <div phx-click="add" phx-value-uri="<%= uri %>" class="w-full	cursor-pointer rounded mx-auto bg-white shadow-md hover:shadow-lg">
+        <img class="w-32 h-32 rounded-full mx-auto" src="<%= preview %>" width="64" height="64">
+        <div class="pt-6 md:p-8 text-center md:text-left space-y-4">
+          <p class="text-lg font-semibold"><%= artist %></b>
+          <div class="text-gray-500">
+            <%= name %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <form phx-blur="search" phx-submit="search">
+    <input type="text" name="q" value="<%= @query %>" placeholder="Search song" autocomplete="off" />
+    <button type="submit" phx-disable-with="Searching...">Search</button>
+  </form>
 </section>
