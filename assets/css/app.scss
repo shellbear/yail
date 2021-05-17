@@ -1,11 +1,13 @@
 /* This file is for your main application css. */
-@import "./phoenix.css";
+@import "./yail.scss";
 
 /* Tailwind.css imports */
 @import "tailwindcss";
 @import "tailwindcss/base";
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700;800&display=swap');
 
 /* LiveView specific classes for your customizations */
 .phx-no-feedback.invalid-feedback,

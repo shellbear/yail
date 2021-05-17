@@ -35,6 +35,7 @@ defmodule YailWeb.PageLive do
       is_playing: false,
       track_name: "",
       track_image: "",
+      artist: "",
       query: "",
       results: []
     }
@@ -79,6 +80,66 @@ defmodule YailWeb.PageLive do
   end
 
   @impl true
+  def handle_event("search", %{"q" => "spotify:track:" <> track_id}, socket) do
+    socket =
+      case Spotify.Track.get_track(get_credentials(socket), track_id) do
+        {:ok, track} ->
+          images = track.album["images"]
+          image = Enum.find(images, &(&1["height"] == 64)) || hd(images)
+
+          assign(socket, :results, [
+            %{
+              :artist => hd(track.artists)["name"],
+              :preview => image["url"],
+              :name => track.name,
+              :uri => track.uri
+            }
+          ])
+
+        {:error, reason} ->
+          Logger.error("Failed to fetch track: #{reason}")
+          socket
+
+        _ ->
+          socket
+      end
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("search", %{"q" => "spotify:album:" <> album_id}, socket) do
+    socket =
+      case Spotify.Album.get_album(get_credentials(socket), album_id) do
+        {:ok, album} ->
+          images = album.images
+          image = Enum.find(images, &(&1["height"] == 64)) || hd(images)
+
+          items =
+            album.tracks.items
+            |> Enum.map(
+              &%{
+                artist: hd(&1.artists)["name"],
+                preview: image["url"],
+                name: &1.name,
+                uri: &1.uri
+              }
+            )
+
+          assign(socket, :results, items)
+
+        {:error, reason} ->
+          Logger.error("Failed to fetch album: #{reason}")
+          socket
+
+        _ ->
+          socket
+      end
+
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_event("search", %{"q" => query}, socket) do
     socket =
       socket
@@ -113,6 +174,7 @@ defmodule YailWeb.PageLive do
           assign(socket, %{
             is_playing: playback.is_playing,
             track_name: playback.item.name,
+            artist: hd(playback.item.artists)["name"],
             track_image: image["url"]
           })
 
@@ -158,10 +220,10 @@ defmodule YailWeb.PageLive do
               image = Enum.find(images, &(&1["height"] == 64)) || hd(images)
 
               %{
-                :artist => hd(item.artists)["name"],
-                :preview => image["url"],
-                :name => item.name,
-                :uri => item.uri
+                artist: hd(item.artists)["name"],
+                preview: image["url"],
+                name: item.name,
+                uri: item.uri
               }
             end)
 

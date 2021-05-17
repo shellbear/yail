@@ -1,6 +1,3 @@
-<section class="phx-hero">
-  <h1><%= gettext "Welcome to %{name}!", name: "Phoenix" %></h1>
-  <p>Peace of mind from prototype to production</p>
-</section>
-
-<a href="/auth/spotify">Login with Spotify</a>
+<div class="flex items-center justify-center">
+  <a href="/auth/spotify" class="link text-4xl">Login with Spotify</a>
+<div>

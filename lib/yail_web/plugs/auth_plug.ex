@@ -18,7 +18,6 @@ defmodule YailWeb.AuthPlug do
         |> assign(:is_authenticated, true)
         |> put_session(:spotify_access_token, access_token)
         |> put_session(:spotify_refresh_token, refresh_token)
-        |> Phoenix.Controller.put_flash(:info, "Authenticated")
 
       _ ->
         conn

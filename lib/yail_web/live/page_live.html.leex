@@ -1,16 +1,19 @@
-<section class="phx-hero">
-  <h1><%= gettext "Welcome to %{name}!", name: "Phoenix" %></h1>
-  <p>Peace of mind from prototype to production</p>
 
-  <h2>Currently playing: <%= @track_name %></h2>
-  <img src="<%= @track_image %>" width="300px" height="300px">
-  <button phx-click="previous">Previous</button>
-  <button phx-click="next">Next</button>
-  <%= if @is_playing do %>
-    <button phx-click="pause">Pause</button>
-  <% else %>
-    <button phx-click="play">Play</button>
-  <% end %>
+<section>
+  <div class="flex justify-center items-center w-full flex-col text-center">
+    <b class="text-2xl"><%= @track_name %></b>
+    <span class="text-2xl"><%= @artist %></span>
+    <img src="<%= @track_image %>" width="300px" height="300px">
+    <div class="grid grid-cols-3 gap-4">
+      <button phx-click="previous" class="link">Previous</button>
+      <%= if @is_playing do %>
+        <button phx-click="pause" class="link">Pause</button>
+      <% else %>
+        <button phx-click="play" class="link">Play</button>
+      <% end %>
+      <button phx-click="next" class="link">Next</button>
+    </div>
+  </div>
 
   <div class="grid grid-cols-6 gap-4 justify-items-stretch	">
     <%= for %{:name => name, :artist => artist, :uri => uri, :preview => preview} <- @results do %>
