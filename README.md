@@ -16,6 +16,13 @@ After created your app, you must first define the following environment variable
 
 You can put them inside a `.env` file at the root of the project or by manually exporting them.
 
+## 🐳 Using Docker
+
+```shell script
+docker build yail:latest .
+docker run yail
+```
+
 ## 🧑‍💻 Get started 
 
 To start your Phoenix server:
