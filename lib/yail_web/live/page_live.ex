@@ -6,6 +6,7 @@ defmodule YailWeb.PageLive do
   """
 
   use YailWeb, :live_view
+  alias Yail.Session.Playback
   alias Yail.Session.Session
   require Logger
 
@@ -33,9 +34,7 @@ defmodule YailWeb.PageLive do
     assigns = %{
       session_id: session_id,
       is_playing: false,
-      track_name: "",
-      track_image: "",
-      artist: "",
+      playback: nil,
       query: "",
       results: []
     }
@@ -48,6 +47,7 @@ defmodule YailWeb.PageLive do
     socket =
       case Spotify.Player.play(get_credentials(socket)) do
         :ok -> assign(socket, :is_playing, true)
+        {:ok, %{"error" => %{"message" => message}}} -> put_flash(socket, :error, message)
         _ -> socket
       end
 
@@ -59,6 +59,7 @@ defmodule YailWeb.PageLive do
     socket =
       case Spotify.Player.pause(get_credentials(socket)) do
         :ok -> assign(socket, :is_playing, false)
+        {:ok, %{"error" => %{"message" => message}}} -> put_flash(socket, :error, message)
         _ -> socket
       end
 
@@ -67,14 +68,24 @@ defmodule YailWeb.PageLive do
 
   @impl true
   def handle_event("next", _params, socket) do
-    Spotify.Player.skip_to_next(get_credentials(socket))
+    socket =
+      case Spotify.Player.skip_to_next(get_credentials(socket)) do
+        :ok -> socket
+        {:ok, %{"error" => %{"message" => message}}} -> put_flash(socket, :error, message)
+        _ -> socket
+      end
 
     {:noreply, socket}
   end
 
   @impl true
   def handle_event("previous", _params, socket) do
-    Spotify.Player.skip_to_previous(get_credentials(socket))
+    socket =
+      case Spotify.Player.skip_to_previous(get_credentials(socket)) do
+        :ok -> socket
+        {:ok, %{"error" => %{"message" => message}}} -> put_flash(socket, :error, message)
+        _ -> socket
+      end
 
     {:noreply, socket}
   end
@@ -83,6 +94,9 @@ defmodule YailWeb.PageLive do
   def handle_event("search", %{"q" => "spotify:track:" <> track_id}, socket) do
     socket =
       case Spotify.Track.get_track(get_credentials(socket), track_id) do
+        {:ok, %{"error" => %{"message" => message}}} ->
+          put_flash(socket, :error, message)
+
         {:ok, track} ->
           images = track.album["images"]
           image = Enum.find(images, &(&1["height"] == 64)) || hd(images)
@@ -111,6 +125,9 @@ defmodule YailWeb.PageLive do
   def handle_event("search", %{"q" => "spotify:album:" <> album_id}, socket) do
     socket =
       case Spotify.Album.get_album(get_credentials(socket), album_id) do
+        {:ok, %{"error" => %{"message" => message}}} ->
+          put_flash(socket, :error, message)
+
         {:ok, album} ->
           images = album.images
           image = Enum.find(images, &(&1["height"] == 64)) || hd(images)
@@ -140,6 +157,17 @@ defmodule YailWeb.PageLive do
   end
 
   @impl true
+  def handle_event("search", %{"q" => ""}, socket) do
+    socket =
+      assign(socket, %{
+        query: "",
+        results: []
+      })
+
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_event("search", %{"q" => query}, socket) do
     socket =
       socket
@@ -151,9 +179,18 @@ defmodule YailWeb.PageLive do
 
   @impl true
   def handle_event("add", %{"uri" => uri}, socket) do
-    case Spotify.Player.play(get_credentials(socket), uris: [uri]) do
-      :ok -> Logger.info("Playing: #{uri}")
-    end
+    socket =
+      case Spotify.Player.play(get_credentials(socket), uris: [uri]) do
+        :ok ->
+          Logger.info("Playing: #{uri}")
+          socket
+
+        {:ok, %{"error" => %{"message" => message}}} ->
+          put_flash(socket, :error, message)
+
+        _ ->
+          socket
+      end
 
     {:noreply, socket}
   end
@@ -168,22 +205,36 @@ defmodule YailWeb.PageLive do
           |> redirect(to: "/auth/spotify")
 
         {:ok, playback} ->
-          images = playback.item.album["images"]
-          image = Enum.find(images, &(&1["height"] == 300)) || hd(images)
+          case playback.item do
+            nil ->
+              assign(socket, :is_playing, playback.is_playing)
 
-          assign(socket, %{
-            is_playing: playback.is_playing,
-            track_name: playback.item.name,
-            artist: hd(playback.item.artists)["name"],
-            track_image: image["url"]
-          })
+            {:ok, %{"error" => %{"message" => message}}} ->
+              put_flash(socket, :error, message)
+
+            item ->
+              images = item.album["images"]
+              image = Enum.find(images, &(&1["height"] == 300)) || hd(images)
+
+              assign(socket, %{
+                is_playing: playback.is_playing,
+                playback: %Playback{
+                  track_name: item.name,
+                  artist: hd(item.artists)["name"],
+                  track_image: image["url"]
+                }
+              })
+          end
 
         {:error, reason} ->
           Logger.error("Failed to fetch playback: #{reason}")
           socket
 
-        _ ->
-          socket
+        :ok ->
+          assign(socket, %{
+            is_playing: false,
+            playback: nil
+          })
       end
 
     {:noreply, socket}
@@ -211,6 +262,9 @@ defmodule YailWeb.PageLive do
 
     socket =
       case Spotify.Search.query(credentials, q: query, type: "track") do
+        {:ok, %{"error" => %{"message" => message}}} ->
+          put_flash(socket, :error, message)
+
         {:ok, %{:items => items}} ->
           items =
             items

@@ -4,8 +4,9 @@ defmodule YailWeb.AuthController do
 
   def delete(conn, _params) do
     conn
-    |> put_flash(:info, "You have been logged out!")
-    |> clear_session()
+    |> configure_session(drop: true)
+    |> delete_resp_cookie("spotify_access_token")
+    |> delete_resp_cookie("spotify_refresh_token")
     |> redirect(to: "/")
   end
 

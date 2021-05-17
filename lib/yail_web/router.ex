@@ -29,6 +29,7 @@ defmodule YailWeb.Router do
     pipe_through [:browser, :auth_required]
 
     live "/", PageLive, :index
+    get "/logout", AuthController, :delete
   end
 
   scope "/auth", YailWeb do

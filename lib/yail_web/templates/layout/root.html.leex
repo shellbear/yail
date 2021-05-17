@@ -16,7 +16,11 @@
           Yail
         </a>
         <nav role="navigation">
-          <a href="/login" class="link">Login</a>
+          <%= if assigns[:is_authenticated] do %>
+            <a href="/logout" class="link">Logout</a>
+          <% else %>
+            <a href="/login" class="link">Login</a>
+          <% end %>
         </nav>
       </section>
     </header>
