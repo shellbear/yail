@@ -1,5 +1,4 @@
 defmodule YailWeb.AuthPlug do
-  require Logger
   import Plug.Conn
 
   def init(options) do

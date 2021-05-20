@@ -1,11 +1,13 @@
+/* Tailwind.css imports */
+@import "~tailwindcss";
+@import "~tailwindcss/base";
+@import "~tailwindcss/components";
+@import "~tailwindcss/utilities";
+@import "~@tailwindcss/typography/dist/typography.css";
+
 /* This file is for your main application css. */
 @import "./yail.scss";
-
-/* Tailwind.css imports */
-@import "tailwindcss";
-@import "tailwindcss/base";
-@import "tailwindcss/components";
-@import "tailwindcss/utilities";
+@import "./base.scss";
 
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700;800&display=swap');
 

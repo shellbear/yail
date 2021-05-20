@@ -11,6 +11,10 @@ defmodule YailWeb.Router do
     plug YailWeb.AuthPlug
   end
 
+  pipeline :room do
+    plug YailWeb.RoomPlug
+  end
+
   pipeline :auth_required do
     plug YailWeb.AuthRequiredPlug
   end
@@ -22,13 +26,17 @@ defmodule YailWeb.Router do
   scope "/", YailWeb do
     pipe_through :browser
 
+    get "/", PageController, :new
     get "/login", PageController, :login
+    get "/not_found", PageController, :not_found
+
+    pipe_through :room
+
+    live "/:room_id", PageLive, :index
   end
 
   scope "/", YailWeb do
     pipe_through [:browser, :auth_required]
-
-    live "/", PageLive, :index
     get "/logout", AuthController, :delete
   end
 

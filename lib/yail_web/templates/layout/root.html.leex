@@ -9,29 +9,33 @@
     <link phx-track-static rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/app.css") %>"/>
     <script defer phx-track-static type="text/javascript" src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>
   </head>
-  <body class="mx-auto container justify-center h-screen">
-    <header class="p-16">
-      <section class="flex justify-between content-between">
-        <a href="/" class="text-2xl	font-bold">
-          Yail
-        </a>
-        <nav role="navigation">
-          <%= if assigns[:is_authenticated] do %>
-            <a href="/logout" class="link">Logout</a>
-          <% else %>
-            <a href="/login" class="link">Login</a>
-          <% end %>
-        </nav>
-      </section>
-    </header>
-    <div class="px-16 py-8">
-      <%= @inner_content %>
+  <body class="mx-auto container justify-center h-screen prose">
+    <div class="px-16 py-8 flex flex-col justify-between h-screen">
+      <div>
+        <header class="p-16">
+          <section class="flex justify-between content-between">
+            <a href="/" class="text-2xl	font-bold">
+              Yail
+            </a>
+            <nav role="navigation">
+              <%= if assigns[:is_authenticated] do %>
+                <a href="/logout" class="link">Logout</a>
+              <% else %>
+                <a href="/login" class="link">Login</a>
+              <% end %>
+            </nav>
+          </section>
+        </header>
+        <div>
+          <%= @inner_content %>
+        </div>
+      </div>
+      <footer class="justify-center w-full left-0 bottom-0">
+        <div class="mx-auto container flex justify-between content-center items-center p-4">
+          <p>Yail @ 2021</p>
+          <a href="https://github.com/shellbear/yail" class="link">Source code</a>
+        </div>
+      </footer>
     </div>
   </body>
-  <footer class="justify-center w-full left-0 bottom-0">
-    <div class="mx-auto container flex justify-between content-center items-center p-4">
-      <p>Yail @ 2021</p>
-      <a href="https://github.com/shellbear/yail" class="link">Source code</a>
-    </div>
-  </footer>
 </html>

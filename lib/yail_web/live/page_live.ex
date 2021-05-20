@@ -14,9 +14,8 @@ defmodule YailWeb.PageLive do
 
   @impl true
   def mount(
-        _params,
-        %{"spotify_access_token" => access_token, "spotify_refresh_token" => refresh_token} =
-          _session,
+        %{"room_id" => room_id},
+        session,
         socket
       ) do
     if connected?(socket) do
@@ -24,15 +23,9 @@ defmodule YailWeb.PageLive do
       :timer.send_interval(@playback_update_interval, self(), :update)
     end
 
-    session_id = Nanoid.generate(12)
-
-    Session.put(session_id, %{
-      access_token: access_token,
-      refresh_token: refresh_token
-    })
-
     assigns = %{
-      session_id: session_id,
+      room_id: room_id,
+      is_admin: session["room_id"] == room_id,
       is_playing: false,
       playback: nil,
       query: "",
@@ -292,8 +285,8 @@ defmodule YailWeb.PageLive do
   end
 
   def get_credentials(socket) do
-    session_id = socket.assigns.session_id
-    %{:access_token => access_token, :refresh_token => refresh_token} = Session.get(session_id)
+    room_id = socket.assigns.room_id
+    %{:access_token => access_token, :refresh_token => refresh_token} = Session.get(room_id)
 
     %Spotify.Credentials{
       access_token: access_token,

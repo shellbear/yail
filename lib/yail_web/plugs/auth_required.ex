@@ -1,5 +1,5 @@
 defmodule YailWeb.AuthRequiredPlug do
-  require Logger
+  alias Phoenix.Controller
 
   def init(options) do
     options
@@ -8,7 +8,7 @@ defmodule YailWeb.AuthRequiredPlug do
   def call(conn, _opts) do
     case conn.assigns[:is_authenticated] do
       true -> conn
-      _ -> Phoenix.Controller.redirect(conn, to: "/login")
+      _ -> Controller.redirect(conn, to: "/login")
     end
   end
 end
