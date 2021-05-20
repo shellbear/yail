@@ -38,6 +38,7 @@ defmodule Yail.MixProject do
       {:floki, ">= 0.27.0", only: :test},
       {:spotify_ex, "~> 2.2"},
       {:envy, "~> 1.1"},
+      {:cachex, "~> 3.3"},
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:credo, "~> 1.5", only: [:dev, :test], runtime: false},

@@ -25,4 +25,15 @@ defmodule Yail.Session.Room do
       refresh_token: refresh_token
     }
   end
+
+  def update(room, conn) do
+    %{"spotify_access_token" => access_token, "spotify_refresh_token" => refresh_token} =
+      Plug.Conn.get_session(conn)
+
+    %Room{
+      room
+      | access_token: access_token,
+        refresh_token: refresh_token
+    }
+  end
 end

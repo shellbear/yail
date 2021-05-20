@@ -6,6 +6,7 @@ defmodule YailWeb.PageLive do
   """
 
   use YailWeb, :live_view
+  alias Yail.LiveMonitor
   alias Yail.Session.Playback
   alias Yail.Session.Session
   require Logger
@@ -19,6 +20,8 @@ defmodule YailWeb.PageLive do
         socket
       ) do
     if connected?(socket) do
+      Cachex.incr(:yail, "#{room_id}_count", 1, initial: 0)
+      LiveMonitor.monitor(self(), __MODULE__, %{room_id: room_id})
       Process.send_after(self(), :update, 0)
       :timer.send_interval(@playback_update_interval, self(), :update)
     end
@@ -29,10 +32,16 @@ defmodule YailWeb.PageLive do
       is_playing: false,
       playback: nil,
       query: "",
+      views: 0,
       results: []
     }
 
     {:ok, assign(socket, assigns)}
+  end
+
+  def unmount(_reason, %{room_id: room_id}) do
+    Cachex.decr(:yail, "#{room_id}_count", 1, initial: 1)
+    :ok
   end
 
   @impl true
@@ -229,6 +238,10 @@ defmodule YailWeb.PageLive do
             playback: nil
           })
       end
+
+    room_id = socket.assigns.room_id
+    {:ok, views} = Cachex.get(:yail, "#{room_id}_count")
+    socket = assign(socket, :views, views)
 
     {:noreply, socket}
   end

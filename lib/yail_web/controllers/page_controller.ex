@@ -6,6 +6,19 @@ defmodule YailWeb.PageController do
     Session
   }
 
+  def reset(conn, _params) do
+    case get_session(conn, :room_id) do
+      id -> Session.delete(id)
+    end
+
+    room = Room.new(conn)
+    Session.put(room.id, room)
+
+    conn
+    |> put_session(:room_id, room.id)
+    |> redirect(to: "/#{room.id}")
+  end
+
   def new(conn, _params) do
     room =
       case get_session(conn, :room_id) do
@@ -19,6 +32,7 @@ defmodule YailWeb.PageController do
           end
       end
 
+    room = Room.update(room, conn)
     Session.put(room.id, room)
 
     conn

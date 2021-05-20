@@ -15,6 +15,8 @@ defmodule Yail.Application do
       YailWeb.Endpoint,
       # Start a worker by calling: Yail.Worker.start_link(arg)
       # {Yail.Worker, arg}
+      {Cachex, name: :yail},
+      Yail.LiveMonitor,
       Yail.Session.Session
     ]
 

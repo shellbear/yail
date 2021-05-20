@@ -24,20 +24,21 @@ defmodule YailWeb.Router do
   end
 
   scope "/", YailWeb do
+    pipe_through [:browser, :auth_required]
+    get "/", PageController, :new
+    get "/reset", PageController, :reset
+    get "/logout", AuthController, :delete
+  end
+
+  scope "/", YailWeb do
     pipe_through :browser
 
-    get "/", PageController, :new
     get "/login", PageController, :login
     get "/not_found", PageController, :not_found
 
     pipe_through :room
 
     live "/:room_id", PageLive, :index
-  end
-
-  scope "/", YailWeb do
-    pipe_through [:browser, :auth_required]
-    get "/logout", AuthController, :delete
   end
 
   scope "/auth", YailWeb do

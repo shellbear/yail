@@ -19,6 +19,7 @@
             </a>
             <nav role="navigation">
               <%= if assigns[:is_authenticated] do %>
+                <a href="/reset" class="link">Reset room</a>
                 <a href="/logout" class="link">Logout</a>
               <% else %>
                 <a href="/login" class="link">Login</a>
