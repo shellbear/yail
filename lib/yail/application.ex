@@ -16,8 +16,7 @@ defmodule Yail.Application do
       # Start a worker by calling: Yail.Worker.start_link(arg)
       # {Yail.Worker, arg}
       {Cachex, name: :yail},
-      Yail.LiveMonitor,
-      Yail.Session.Session
+      Yail.LiveMonitor
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

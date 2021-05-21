@@ -1,15 +1,14 @@
 defmodule YailWeb.RoomPlug do
   alias Phoenix.Controller
-  alias Yail.Session.Session
 
   def init(options) do
     options
   end
 
   def call(%{:path_params => %{"room_id" => room_id}} = conn, _opts) do
-    case Session.get(room_id) do
-      nil -> Controller.redirect(conn, to: "/not_found")
-      _ -> conn
+    case Cachex.get(:yail, room_id) do
+      {:ok, room} when not is_nil(room) -> conn
+      _ -> Controller.redirect(conn, to: "/not_found")
     end
   end
 

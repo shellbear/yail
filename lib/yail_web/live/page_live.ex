@@ -6,9 +6,12 @@ defmodule YailWeb.PageLive do
   """
 
   use YailWeb, :live_view
+
   alias Yail.LiveMonitor
+  alias Yail.Session.Artist
   alias Yail.Session.Playback
-  alias Yail.Session.Session
+  alias Yail.Session.Track
+
   require Logger
 
   @playback_update_interval :timer.seconds(1)
@@ -214,16 +217,26 @@ defmodule YailWeb.PageLive do
             {:ok, %{"error" => %{"message" => message}}} ->
               put_flash(socket, :error, message)
 
-            item ->
-              images = item.album["images"]
+            %{
+              uri: uri,
+              name: name,
+              album: %{"images" => images},
+              artists: [%{"uri" => artist_uri, "name" => artist_name} | _]
+            } ->
               image = Enum.find(images, &(&1["height"] == 300)) || hd(images)
 
               assign(socket, %{
                 is_playing: playback.is_playing,
                 playback: %Playback{
-                  track_name: item.name,
-                  artist: hd(item.artists)["name"],
-                  track_image: image["url"]
+                  track: %Track{
+                    uri: uri,
+                    name: name,
+                    preview: image["url"]
+                  },
+                  artist: %Artist{
+                    uri: artist_uri,
+                    name: artist_name
+                  }
                 }
               })
           end
@@ -297,13 +310,18 @@ defmodule YailWeb.PageLive do
     socket
   end
 
-  def get_credentials(socket) do
-    room_id = socket.assigns.room_id
-    %{:access_token => access_token, :refresh_token => refresh_token} = Session.get(room_id)
+  def get_credentials(%{assigns: %{room_id: room_id}}) do
+    case Cachex.get(:yail, room_id) do
+      {:ok, room} when not is_nil(room) ->
+        %{access_token: access_token, refresh_token: refresh_token} = room
 
-    %Spotify.Credentials{
-      access_token: access_token,
-      refresh_token: refresh_token
-    }
+        %Spotify.Credentials{
+          access_token: access_token,
+          refresh_token: refresh_token
+        }
+
+      _ ->
+        nil
+    end
   end
 end

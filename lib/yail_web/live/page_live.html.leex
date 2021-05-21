@@ -1,25 +1,32 @@
 
-<section class="flex justify-center items-center w-full flex-col text-center">
-  <div>
+<section class="flex flex-col justify-center items-center w-full text-center">
+  <div class="flex flex-col justify-center items-center">
   <%= if @playback do %>
-    <b class="text-2xl"><%= @playback.track_name %></b>
-    <span class="text-2xl"><%= @playback.artist %></span>
-    <img src="<%= @playback.track_image %>" width="300px" height="300px">
-    <div class="grid grid-cols-3 gap-4">
-      <button phx-click="previous" class="link">Previous</button>
-      <%= if @is_playing do %>
-        <button phx-click="pause" class="link">Pause</button>
-      <% else %>
-        <button phx-click="play" class="link">Play</button>
-      <% end %>
-      <button phx-click="next" class="link">Next</button>
-    </div>
+    <a href="<%= @playback.track.uri %>">
+      <b class="text-2xl"><%= @playback.track.name %></b>
+    </a>
+    <a href="<%= @playback.artist.uri %>">
+      <span class="text-2xl"><%= @playback.artist.name %></span>
+    </a>
+    <a href="<%= @playback.track.uri %>">
+      <img src="<%= @playback.track.preview %>" width="300px" height="300px">
+    </a>
+    <%= if @is_admin do %>
+      <div class="grid grid-cols-3 gap-4">
+        <button phx-click="previous" class="link">Previous</button>
+        <%= if @is_playing do %>
+          <button phx-click="pause" class="link">Pause</button>
+        <% else %>
+          <button phx-click="play" class="link">Play</button>
+        <% end %>
+        <button phx-click="next" class="link">Next</button>
+      </div>
+    <% end %>
     <% else %>
       <b>No song is currently playing</b>
     <% end %>
   </div>
 
-  <p>is_creator: <%= @is_admin %></p>
   <p>viewers: <%= @views %></p>
 
   <div class="py-16 w-full">

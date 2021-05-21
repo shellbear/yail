@@ -1,18 +1,15 @@
 defmodule YailWeb.PageController do
   use YailWeb, :controller
 
-  alias Yail.Session.{
-    Room,
-    Session
-  }
+  alias Yail.Session.Room
 
   def reset(conn, _params) do
     case get_session(conn, :room_id) do
-      id -> Session.delete(id)
+      id -> Cachex.del(:yail, id)
     end
 
     room = Room.new(conn)
-    Session.put(room.id, room)
+    Cachex.put(:yail, room.id, room)
 
     conn
     |> put_session(:room_id, room.id)
@@ -26,14 +23,14 @@ defmodule YailWeb.PageController do
           Room.new(conn)
 
         id ->
-          case Session.get(id) do
-            nil -> Room.new(conn)
-            room -> room
+          case Cachex.get(:yail, id) do
+            {:ok, room} when not is_nil(room) -> room
+            _ -> Room.new(conn)
           end
       end
 
     room = Room.update(room, conn)
-    Session.put(room.id, room)
+    Cachex.put(:yail, room.id, room)
 
     conn
     |> put_session(:room_id, room.id)
