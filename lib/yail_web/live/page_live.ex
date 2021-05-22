@@ -7,10 +7,9 @@ defmodule YailWeb.PageLive do
 
   use YailWeb, :live_view
 
+  alias Phoenix.Socket.Broadcast
   alias Yail.LiveMonitor
-  alias Yail.Session.Artist
-  alias Yail.Session.Playback
-  alias Yail.Session.Track
+  alias Yail.Session.{Artist, Playback, Track}
 
   require Logger
 
@@ -25,8 +24,13 @@ defmodule YailWeb.PageLive do
     if connected?(socket) do
       Cachex.incr(:yail, "#{room_id}_count", 1, initial: 0)
       LiveMonitor.monitor(self(), __MODULE__, %{room_id: room_id})
-      Process.send_after(self(), :update, 0)
-      :timer.send_interval(@playback_update_interval, self(), :update)
+
+      if session["room_id"] == room_id do
+        Process.send_after(self(), :update, 0)
+        :timer.send_interval(@playback_update_interval, self(), :update)
+      else
+        YailWeb.Endpoint.subscribe(room_id)
+      end
     end
 
     assigns = %{
@@ -201,6 +205,11 @@ defmodule YailWeb.PageLive do
   end
 
   @impl true
+  def handle_info(%Broadcast{event: "update", payload: state}, socket) do
+    {:noreply, assign(socket, state)}
+  end
+
+  @impl true
   def handle_info(:update, socket) do
     socket =
       case Spotify.Player.get_current_playback(get_credentials(socket)) do
@@ -255,6 +264,9 @@ defmodule YailWeb.PageLive do
     room_id = socket.assigns.room_id
     {:ok, views} = Cachex.get(:yail, "#{room_id}_count")
     socket = assign(socket, :views, views)
+
+    new_state = Map.take(socket.assigns, [:is_playing, :playback, :views])
+    YailWeb.Endpoint.broadcast!(room_id, "update", new_state)
 
     {:noreply, socket}
   end
