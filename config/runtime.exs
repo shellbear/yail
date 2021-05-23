@@ -5,7 +5,8 @@ if config_env() in [:dev, :test] do
 end
 
 ### Optional params
-port = System.get_env("PORT") || 4000
+port = String.to_integer(System.get_env("PORT", "4000"))
+callback_url = System.get_env("CALLBACK_URL", "http://127.0.0.1:#{port}/auth/spotify/callback")
 
 ### Mandatory params
 spotify_client_id = System.get_env("SPOTIFY_CLIENT_ID")
@@ -22,8 +23,7 @@ end
 config :spotify_ex,
   client_id: spotify_client_id,
   secret_key: spotify_secret_key,
-  scopes: ["user-read-playback-state", "user-modify-playback-state", "user-read-private"],
-  callback_url: "http://127.0.0.1:4000/auth/spotify/callback"
+  callback_url: callback_url,
+  scopes: ["user-read-playback-state", "user-modify-playback-state", "user-read-private"]
 
-config :yail, YailWeb.Endpoint,
-  http: [port: port]
+config :yail, YailWeb.Endpoint, http: [port: port]
