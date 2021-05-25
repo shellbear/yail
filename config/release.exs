@@ -22,5 +22,6 @@ end
 
 config :yail, YailWeb.Endpoint,
   server: true,
+  check_origin: [URI.to_string(base_url)],
   url: [host: base_url.host, scheme: base_url.scheme, port: base_url.port],
   secret_key_base: secret_key_base
