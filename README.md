@@ -23,6 +23,16 @@ docker build yail:latest .
 docker run yail
 ```
 
+## 🚀 Deployment
+
+- SECRET_KEY_BASE
+- BASE_URL
+
+Generate a secret
+```shell script
+mix phx.gen.secret 64
+```
+
 ## 🧑‍💻 Get started 
 
 To start your Phoenix server:

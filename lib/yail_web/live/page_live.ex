@@ -194,7 +194,6 @@ defmodule YailWeb.PageLive do
     socket =
       case Spotify.Player.play(get_credentials(socket), uris: [uri]) do
         :ok ->
-          Logger.info("Playing: #{uri}")
           socket
 
         {:ok, %{"error" => %{"message" => message}}} ->
@@ -219,7 +218,7 @@ defmodule YailWeb.PageLive do
   end
 
   @impl true
-  def handle_info(:update, socket) do
+  def handle_info(:update, %{assigns: %{room_id: room_id}} = socket) do
     socket =
       case Spotify.Player.get_current_playback(get_credentials(socket)) do
         {:ok, %{"error" => %{"status" => 401}}} ->
@@ -229,15 +228,6 @@ defmodule YailWeb.PageLive do
 
         {:ok, %{"error" => %{"message" => message}}} ->
           put_flash(socket, :error, message)
-
-        :ok ->
-          assign(socket, %{
-            is_playing: false,
-            playback: nil
-          })
-
-        {:ok, %{is_playing: is_playing}} ->
-          assign(socket, :is_playing, is_playing)
 
         {:ok,
          %{
@@ -265,9 +255,17 @@ defmodule YailWeb.PageLive do
               }
             }
           })
+
+        :ok ->
+          assign(socket, %{
+            is_playing: false,
+            playback: nil
+          })
+
+        {:ok, %{is_playing: is_playing}} ->
+          assign(socket, :is_playing, is_playing)
       end
 
-    room_id = socket.assigns.room_id
     state = Map.take(socket.assigns, [:is_playing, :playback, :views])
     YailWeb.Endpoint.broadcast!(room(room_id), "update", state)
 

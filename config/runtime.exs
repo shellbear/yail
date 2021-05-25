@@ -27,3 +27,32 @@ config :spotify_ex,
   scopes: ["user-read-playback-state", "user-modify-playback-state", "user-read-private"]
 
 config :yail, YailWeb.Endpoint, http: [port: port]
+
+if config_env() == :prod do
+  secret_key_base =
+    case System.get_env("SECRET_KEY_BASE") do
+      nil -> raise "SECRET_KEY_BASE configuration option is required."
+      key when byte_size(key) < 64 -> raise "SECRET_KEY_BASE must be at least 64 bytes long."
+      key -> key
+    end
+
+  base_url =
+    case System.get_env("BASE_URL") do
+      nil ->
+        raise "BASE_URL configuration option is required."
+
+      base_url ->
+        case URI.parse(base_url) do
+          %{scheme: scheme} = url when scheme in ["http", "https"] ->
+            url
+
+          _ ->
+            raise "BASE_URL must start with `http` or `https`. Currently configured as `#{System.get_env("BASE_URL")}`"
+        end
+    end
+
+  config :yail, YailWeb.Endpoint,
+    server: true,
+    url: [host: base_url.host, scheme: base_url.scheme, port: base_url.port],
+    secret_key_base: secret_key_base
+end
