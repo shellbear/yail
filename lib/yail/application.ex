@@ -13,6 +13,7 @@ defmodule Yail.Application do
       {Phoenix.PubSub, name: Yail.PubSub},
       # Start the Endpoint (http/https)
       YailWeb.Endpoint,
+      YailWeb.Presence,
       # Start a worker by calling: Yail.Worker.start_link(arg)
       # {Yail.Worker, arg}
       {Cachex, name: :yail},

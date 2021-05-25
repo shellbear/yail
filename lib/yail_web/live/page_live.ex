@@ -10,10 +10,14 @@ defmodule YailWeb.PageLive do
   alias Phoenix.Socket.Broadcast
   alias Yail.LiveMonitor
   alias Yail.Session.{Artist, Playback, Track}
+  alias YailWeb.Presence
 
   require Logger
 
   @playback_update_interval :timer.seconds(1)
+
+  def room(room_id), do: "room:#{room_id}"
+  def views_count(room_id), do: length(Map.keys(Presence.list(room(room_id))))
 
   @impl true
   def mount(
@@ -22,14 +26,13 @@ defmodule YailWeb.PageLive do
         socket
       ) do
     if connected?(socket) do
-      Cachex.incr(:yail, "#{room_id}_count", 1, initial: 0)
-      LiveMonitor.monitor(self(), __MODULE__, %{room_id: room_id})
+      LiveMonitor.monitor(self(), __MODULE__, %{room_id: room_id, socket_id: socket.id})
+      Presence.track(self(), room(room_id), socket.id, %{})
+      YailWeb.Endpoint.subscribe(room(room_id))
 
       if session["room_id"] == room_id do
-        Process.send_after(self(), :update, 0)
+        send(self(), :update)
         :timer.send_interval(@playback_update_interval, self(), :update)
-      else
-        YailWeb.Endpoint.subscribe(room_id)
       end
     end
 
@@ -39,15 +42,15 @@ defmodule YailWeb.PageLive do
       is_playing: false,
       playback: nil,
       query: "",
-      views: 0,
+      views: views_count(room_id),
       results: []
     }
 
     {:ok, assign(socket, assigns)}
   end
 
-  def unmount(_reason, %{room_id: room_id}) do
-    Cachex.decr(:yail, "#{room_id}_count", 1, initial: 1)
+  def unmount(_reason, %{room_id: room_id, socket_id: socket_id}) do
+    Presence.untrack(self(), room_id, socket_id)
     :ok
   end
 
@@ -205,6 +208,12 @@ defmodule YailWeb.PageLive do
   end
 
   @impl true
+  def handle_info(%Broadcast{event: "presence_diff"}, %{assigns: %{room_id: room_id}} = socket) do
+    views = views_count(room_id)
+    {:noreply, assign(socket, :views, views)}
+  end
+
+  @impl true
   def handle_info(%Broadcast{event: "update", payload: state}, socket) do
     {:noreply, assign(socket, state)}
   end
@@ -218,55 +227,49 @@ defmodule YailWeb.PageLive do
           |> put_flash(:warn, "Token expired")
           |> redirect(to: "/auth/spotify")
 
-        {:ok, playback} ->
-          case playback.item do
-            nil ->
-              assign(socket, :is_playing, playback.is_playing)
-
-            {:ok, %{"error" => %{"message" => message}}} ->
-              put_flash(socket, :error, message)
-
-            %{
-              uri: uri,
-              name: name,
-              album: %{"images" => images},
-              artists: [%{"uri" => artist_uri, "name" => artist_name} | _]
-            } ->
-              image = Enum.find(images, &(&1["height"] == 300)) || hd(images)
-
-              assign(socket, %{
-                is_playing: playback.is_playing,
-                playback: %Playback{
-                  track: %Track{
-                    uri: uri,
-                    name: name,
-                    preview: image["url"]
-                  },
-                  artist: %Artist{
-                    uri: artist_uri,
-                    name: artist_name
-                  }
-                }
-              })
-          end
-
-        {:error, reason} ->
-          Logger.error("Failed to fetch playback: #{reason}")
-          socket
+        {:ok, %{"error" => %{"message" => message}}} ->
+          put_flash(socket, :error, message)
 
         :ok ->
           assign(socket, %{
             is_playing: false,
             playback: nil
           })
+
+        {:ok, %{is_playing: is_playing}} ->
+          assign(socket, :is_playing, is_playing)
+
+        {:ok,
+         %{
+           is_playing: is_playing,
+           item: %{
+             uri: uri,
+             name: name,
+             album: %{"images" => images},
+             artists: [%{"uri" => artist_uri, "name" => artist_name} | _]
+           }
+         }} ->
+          image = Enum.find(images, &(&1["height"] == 300)) || hd(images)
+
+          assign(socket, %{
+            is_playing: is_playing,
+            playback: %Playback{
+              track: %Track{
+                uri: uri,
+                name: name,
+                preview: image["url"]
+              },
+              artist: %Artist{
+                uri: artist_uri,
+                name: artist_name
+              }
+            }
+          })
       end
 
     room_id = socket.assigns.room_id
-    {:ok, views} = Cachex.get(:yail, "#{room_id}_count")
-    socket = assign(socket, :views, views)
-
-    new_state = Map.take(socket.assigns, [:is_playing, :playback, :views])
-    YailWeb.Endpoint.broadcast!(room_id, "update", new_state)
+    state = Map.take(socket.assigns, [:is_playing, :playback, :views])
+    YailWeb.Endpoint.broadcast!(room(room_id), "update", state)
 
     {:noreply, socket}
   end
@@ -324,9 +327,7 @@ defmodule YailWeb.PageLive do
 
   def get_credentials(%{assigns: %{room_id: room_id}}) do
     case Cachex.get(:yail, room_id) do
-      {:ok, room} when not is_nil(room) ->
-        %{access_token: access_token, refresh_token: refresh_token} = room
-
+      {:ok, %{access_token: access_token, refresh_token: refresh_token}} ->
         %Spotify.Credentials{
           access_token: access_token,
           refresh_token: refresh_token
