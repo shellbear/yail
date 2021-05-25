@@ -4,7 +4,9 @@ A real-time collaborative song-request queue for Spotify.
 
 ## 🎧 Demo
 
-To do...
+You can access the live demo at: https://yail.herokuapp.com/
+
+![preview](./.github/workflows/assets/preview.png)
 
 ## ⚙️ Environment variables
 
