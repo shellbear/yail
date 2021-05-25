@@ -23,15 +23,25 @@ docker build yail:latest .
 docker run yail
 ```
 
-## 🚀 Deployment
+## 🚀 Self-hosting
 
-- SECRET_KEY_BASE
-- BASE_URL
+You can easily self-host this app. The easiest version is to run the app with Docker.
 
-Generate a secret
+You have to define the following mandatory environment variables.
+
+- `SECRET_KEY_BASE` (64 bytes)
+
+A secret used to encode session and other sensitive data. For security reasons it must be composed of at least 64 characters.
+
+You can easily generate it inside the root of this repo using the mix [phx.gen.secret](https://hexdocs.pm/phoenix/Mix.Tasks.Phx.Gen.Secret.html) command:
+
 ```shell script
 mix phx.gen.secret 64
 ```
+
+- `BASE_URL`
+
+The base URL of the web application. This is for example the URL of a custom domain: `https://example.com` or an ip address.
 
 ## 🧑‍💻 Get started 
 
