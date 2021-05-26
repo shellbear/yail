@@ -1,0 +1,26 @@
+<div class="flex flex-col items-center justify-center my-20">
+  <h1 class="text-white">Make your parties
+    <span class="text-green-500">collaboratives</span>
+  </h1>
+
+  <div class="flex flex-col">
+    <div class="flex items-center content-center justify-center">
+      <ol>
+        <li>Connect with Spotify</li>
+        <li>Share an unique link to anyone</li>
+        <li>Let people add songs to the queue</li>
+        <li>Enjoy!</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="py-20">
+  <a class="link text-green-500 bg-gray-700 px-10 py-4" href="/login">Login with Spotify</a>
+  </div>
+<div>
+
+<div class="fixed inset-0 overflow-hidden" style="z-index:-100;">
+  <video autoplay loop muted class="fixed min-w-full min-h-full inset-0 object-cover m-0" style="filter:brightness(15%);">
+    <source src="<%= Routes.static_path(@conn, "/videos/preview.mp4") %>" />
+  </video>
+</div>

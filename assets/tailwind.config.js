@@ -1,5 +1,5 @@
 module.exports = {
-  mode: "jit",
+  //mode: "jit",
   purge: [
     "../lib/**/*.ex",
     "../lib/**/*.leex",
@@ -7,8 +7,20 @@ module.exports = {
     "./js/**/*.js",
   ],
   darkMode: false,
+  important: true,
   theme: {
-    extend: {},
+    extend: {
+      typography: () => ({
+        DEFAULT: {
+          css: {
+            color: 'white',
+            a: {
+              color: 'white',
+            },
+          },
+        },
+      })
+    },
   },
   variants: {
     extend: {},

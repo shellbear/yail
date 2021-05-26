@@ -7,7 +7,7 @@ on:
 jobs:
   build:
 
-    name: Build and test
+    name: Build, test and lint
     runs-on: ubuntu-latest
 
     steps:
@@ -15,8 +15,8 @@ jobs:
     - name: Set up Elixir
       uses: erlef/setup-elixir@885971a72ed1f9240973bd92ab57af8c1aa68f24
       with:
-        elixir-version: '1.10.3' # Define the elixir version [required]
-        otp-version: '22.3' # Define the OTP version [required]
+        elixir-version: '1.12.0'
+        otp-version: '24.0'
     - name: Restore dependencies cache
       uses: actions/cache@v2
       with:
@@ -25,15 +25,13 @@ jobs:
         restore-keys: ${{ runner.os }}-mix-
     - name: Install dependencies
       run: mix deps.get
+    - name: Check if code is formatted
+      run: mix format --check-formatted
     - name: Compiler
       run: mix compile --warnings-as-errors
     - name: Check deprecated code
       run: mix xref deprecated --abort-if-any
     - name: Check unreachable code
       run: mix xref unreachable --abort-if-any
-    - name: Check if code is formatted
-      run: mix format --check-formatted
     - name: Run credo
       run: mix credo --strict
-    - name: Run tests
-      run: mix test

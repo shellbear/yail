@@ -51,7 +51,7 @@ config :yail, YailWeb.Endpoint,
 config :yail, YailWeb.Endpoint,
   live_reload: [
     patterns: [
-      ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",
+      ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg|mp4)$",
       ~r"priv/gettext/.*(po)$",
       ~r"lib/yail_web/(live|views)/.*(ex)$",
       ~r"lib/yail_web/templates/.*(eex)$"

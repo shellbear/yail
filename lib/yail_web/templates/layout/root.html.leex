@@ -10,9 +10,9 @@
     <script defer phx-track-static type="text/javascript" src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>
   </head>
   <body class="mx-auto container justify-center h-screen">
-    <div class="px-16 py-8 flex flex-col justify-between h-screen prose max-w-none">
+    <div class="px-6 md:px-16 py-4 flex flex-col justify-between h-screen prose max-w-none">
       <div>
-        <header class="p-16">
+        <header class="px-4 py-4 md:px-16 md:py-8">
           <section class="flex justify-between content-between">
             <a href="/" class="text-2xl	font-bold">
               Yail
@@ -32,9 +32,13 @@
         </div>
       </div>
       <footer class="justify-center w-full left-0 bottom-0">
-        <div class="mx-auto container flex justify-between content-center items-center p-4">
-          <p>Yail @ 2021</p>
-          <a href="https://github.com/shellbear/yail" class="link">Source code</a>
+        <div class="mx-auto container flex justify-center md:justify-between content-center items-center p-4">
+          <a class="hidden md:block" href="https://shellbear.me/">made by shellbear</a>
+          <div class="flex">
+            <a class="link" href="/privacy">Privacy</a>
+            <a class="link" href="mailto:hello@shellbear.me">Contact</a>
+            <a class="link" href="https://github.com/shellbear/yail">Github</a>
+          </div>
         </div>
       </footer>
     </div>

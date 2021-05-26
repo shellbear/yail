@@ -36,14 +36,14 @@
     </form>
   </div>
 
-  <div class="grid grid-cols-6 gap-4 justify-items-stretch	">
+  <div class="grid grid-cols-1 md:grid-cols-6 gap-4 justify-items-stretch	">
     <%= for %{:name => name, :artist => artist, :uri => uri, :preview => preview} <- @results do %>
       <div phx-click="add" phx-value-uri="<%= uri %>" class="w-full	cursor-pointer rounded mx-auto bg-white shadow-md hover:shadow-lg">
-        <img class="w-32 h-32 rounded-full mx-auto" src="<%= preview %>" width="64" height="64">
-        <div class="flex flex-col	text-center pt-6 p-8 text-center space-y-4">
-          <p class="text-lg font-semibold"><%= artist %></b>
+        <img class="w-32 h-32 rounded-full mx-auto m-4" src="<%= preview %>">
+        <div class="flex flex-col	text-center p-4 text-center space-y-4">
+          <span class="text-lg font-semibold text-black"><%= name %></b>
           <div class="text-gray-500">
-            <%= name %>
+            <%= artist %>
           </div>
         </div>
       </div>

@@ -19,6 +19,10 @@ defmodule YailWeb.Router do
     plug YailWeb.AuthRequiredPlug
   end
 
+  pipeline :auth_redirect do
+    plug YailWeb.AuthRedirect
+  end
+
   pipeline :api do
     plug :accepts, ["json"]
   end
@@ -41,7 +45,7 @@ defmodule YailWeb.Router do
 
   scope "/", YailWeb do
     pipe_through [:browser, :auth_required]
-    get "/", PageController, :new
+    get "/home", PageController, :new
     get "/reset", PageController, :reset
     get "/logout", AuthController, :delete
   end
@@ -49,7 +53,16 @@ defmodule YailWeb.Router do
   scope "/", YailWeb do
     pipe_through :browser
 
+    get "/privacy", PageController, :privacy
+
+    pipe_through :auth_redirect
+    get "/", PageController, :landing
     get "/login", PageController, :login
+  end
+
+  scope "/", YailWeb do
+    pipe_through :browser
+
     get "/not_found", PageController, :not_found
 
     pipe_through :room

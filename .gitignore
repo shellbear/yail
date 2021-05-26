@@ -39,3 +39,5 @@ npm-debug.log
 
 # Secrets
 .env
+
+.DS_Store

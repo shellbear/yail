@@ -37,8 +37,16 @@ defmodule YailWeb.PageController do
     |> redirect(to: "/#{room.id}")
   end
 
+  def landing(conn, _params) do
+    render(conn, "landing.html")
+  end
+
+  def privacy(conn, _params) do
+    render(conn, "privacy.html")
+  end
+
   def login(conn, _params) do
-    render(conn, "login.html")
+    redirect(conn, to: "/auth/spotify")
   end
 
   def not_found(conn, _params) do
