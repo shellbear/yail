@@ -1,30 +1,45 @@
 
 <section class="flex flex-col justify-center items-center w-full text-center">
-  <div class="flex flex-col justify-center items-center">
-  <%= if @playback do %>
-    <a href="<%= @playback.track.uri %>">
-      <b class="text-2xl"><%= @playback.track.name %></b>
-    </a>
-    <a href="<%= @playback.artist.uri %>">
-      <span class="text-2xl"><%= @playback.artist.name %></span>
-    </a>
-    <a href="<%= @playback.track.uri %>">
-      <img src="<%= @playback.track.preview %>" width="300px" height="300px">
-    </a>
-    <%= if @is_admin do %>
-      <div class="grid grid-cols-3 gap-4">
-        <button phx-click="previous" class="link">Previous</button>
-        <%= if @is_playing do %>
-          <button phx-click="pause" class="link">Pause</button>
-        <% else %>
-          <button phx-click="play" class="link">Play</button>
-        <% end %>
-        <button phx-click="next" class="link">Next</button>
-      </div>
-    <% end %>
-    <% else %>
-      <b>No song is currently playing</b>
-    <% end %>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-15">
+    <div class="flex flex-col justify-center items-center">
+    <%= if @playback do %>
+      <a href="<%= @playback.track.uri %>">
+        <b class="text-2xl"><%= @playback.track.name %></b>
+      </a>
+      <a href="<%= @playback.artist.uri %>">
+        <span class="text-2xl"><%= @playback.artist.name %></span>
+      </a>
+      <img src="<%= @playback.track.preview %>" class="h-100 w-100">
+      <%= if @is_admin do %>
+        <div class="grid grid-cols-3 gap-4">
+          <button phx-click="previous" class="link">Previous</button>
+          <%= if @is_playing do %>
+            <button phx-click="pause" class="link">Pause</button>
+          <% else %>
+            <button phx-click="play" class="link">Play</button>
+          <% end %>
+          <button phx-click="next" class="link">Next</button>
+        </div>
+      <% end %>
+      <% else %>
+        <b>No song is currently playing</b>
+      <% end %>
+    </div>
+
+    <div class="grid grid-cols-1 gap-2 pt-6 overflow-y-scroll max-h-96 w-full">
+      <%= for %{name: name, artist: artist, uri: uri, preview: preview} <- @queue do %>
+          <div phx-click="play" phx-value-uri="<%= uri %>" class="p-3 bg-gray-800 bg-opacity-40 rounded-xl w-full h-full hover:bg-green-800 text-white cursor-pointer <%= if @playback && uri == @playback.track.uri do %>bg-green-500<% end %>">
+            <div class="flex flex-row items-start justify-start">
+              <img class="w-20 h-20 m-4" src="<%= preview %>">
+              <div class="flex flex-col justify-start align-items-center h-full">
+                  <b><%= name %></b>
+                <span><%= artist %></span>
+              </div>
+            </div>
+          </div>
+        </a>
+      <% end %>
+    </div>
   </div>
 
   <p>viewers: <%= @views %></p>
@@ -37,8 +52,8 @@
   </div>
 
   <div class="grid grid-cols-1 md:grid-cols-6 gap-4 justify-items-stretch	">
-    <%= for %{:name => name, :artist => artist, :uri => uri, :preview => preview} <- @results do %>
-      <div phx-click="add" phx-value-uri="<%= uri %>" class="w-full	cursor-pointer rounded mx-auto bg-white shadow-md hover:shadow-lg">
+    <%= for %{name: name, artist: artist, uri: uri, preview: preview} <- @results do %>
+      <div phx-click="add" phx-value-name="<%= name %>" phx-value-preview="<%= preview %>" phx-value-artist="<%= artist %>" phx-value-uri="<%= uri %>" class="w-full	cursor-pointer rounded mx-auto bg-white shadow-md hover:shadow-lg">
         <img class="w-32 h-32 rounded-full mx-auto m-4" src="<%= preview %>">
         <div class="flex flex-col	text-center p-4 text-center space-y-4">
           <span class="text-lg font-semibold text-black"><%= name %></b>

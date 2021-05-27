@@ -9,7 +9,7 @@ defmodule YailWeb.PageLive do
 
   alias Phoenix.Socket.Broadcast
   alias Yail.LiveMonitor
-  alias Yail.Session.{Artist, Playback, Track}
+  alias Yail.Session.{Artist, Playback, Room, Track}
   alias YailWeb.Presence
 
   require Logger
@@ -28,6 +28,7 @@ defmodule YailWeb.PageLive do
     if connected?(socket) do
       LiveMonitor.monitor(self(), __MODULE__, %{room_id: room_id, socket_id: socket.id})
       Presence.track(self(), room(room_id), socket.id, %{})
+
       YailWeb.Endpoint.subscribe(room(room_id))
 
       if session["room_id"] == room_id do
@@ -36,12 +37,19 @@ defmodule YailWeb.PageLive do
       end
     end
 
+    tracks =
+      case Cachex.get(:yail, room_id, []) do
+        {:ok, %{tracks: tracks}} -> tracks
+        _ -> []
+      end
+
     assigns = %{
       room_id: room_id,
       is_admin: session["room_id"] == room_id,
       is_playing: false,
       playback: nil,
       query: "",
+      queue: tracks,
       views: views_count(room_id),
       results: []
     }
@@ -55,11 +63,22 @@ defmodule YailWeb.PageLive do
   end
 
   @impl true
+  def handle_event("play", %{"uri" => uri}, socket) do
+    socket =
+      case Spotify.Player.play(get_credentials(socket), uris: [uri]) do
+        :ok -> assign(socket, :is_playing, true)
+        {:ok, %{"error" => %{"message" => message}}} -> put_flash(socket, :error, message)
+        _ -> socket
+      end
+
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_event("play", _params, socket) do
     socket =
       case Spotify.Player.play(get_credentials(socket)) do
         :ok -> assign(socket, :is_playing, true)
-        {:ok, %{"error" => %{"message" => message}}} -> put_flash(socket, :error, message)
         _ -> socket
       end
 
@@ -190,11 +209,20 @@ defmodule YailWeb.PageLive do
   end
 
   @impl true
-  def handle_event("add", %{"uri" => uri}, socket) do
+  def handle_event(
+        "add",
+        %{"preview" => preview, "name" => name, "artist" => artist, "uri" => uri},
+        %{assigns: %{room_id: room_id}} = socket
+      ) do
+    track = %Track{preview: preview, name: name, artist: artist, uri: uri}
+    YailWeb.Endpoint.broadcast!(room(room_id), "add", track)
+
+    Cachex.get_and_update(:yail, room_id, &%Room{&1 | tracks: &1.tracks ++ [track]})
+
     socket =
       case Spotify.Player.play(get_credentials(socket), uris: [uri]) do
         :ok ->
-          socket
+          assign(socket, :is_playing, true)
 
         {:ok, %{"error" => %{"message" => message}}} ->
           put_flash(socket, :error, message)
@@ -215,6 +243,11 @@ defmodule YailWeb.PageLive do
   @impl true
   def handle_info(%Broadcast{event: "update", payload: state}, socket) do
     {:noreply, assign(socket, state)}
+  end
+
+  @impl true
+  def handle_info(%Broadcast{event: "add", payload: track}, %{assigns: %{queue: queue}} = socket) do
+    {:noreply, assign(socket, :queue, queue ++ [track])}
   end
 
   @impl true
