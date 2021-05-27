@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <%= csrf_meta_tag() %>
     <%= live_title_tag assigns[:page_title] || "Yail" %>
+    <meta name="description" content="Real-time collaborative queue for Spotify">
     <link phx-track-static rel="stylesheet" href="<%= Routes.static_path(@conn, "/css/app.css") %>"/>
     <script defer phx-track-static type="text/javascript" src="<%= Routes.static_path(@conn, "/js/app.js") %>"></script>
   </head>
@@ -13,9 +14,12 @@
     <div class="px-6 md:px-16 py-4 flex flex-col justify-between h-screen prose max-w-none">
       <div>
         <header class="px-4 py-4 md:px-16 md:py-8">
-          <section class="flex justify-between content-between">
-            <a href="/" class="text-2xl	font-bold">
-              Yail
+          <section class="flex justify-between content-between items-center">
+            <a href="/">
+              <div class="flex flex-row items-center gap-3">
+                <img src="<%= Routes.static_path(@conn, "/images/logo.svg") %>" class="w-8 h-8 m-0">
+                <span class="hidden md:block text-2xl	font-bold">Yail</span>
+              </div>
             </a>
             <nav role="navigation">
               <%= if assigns[:is_authenticated] do %>
@@ -27,7 +31,7 @@
             </nav>
           </section>
         </header>
-        <div>
+        <div class="py-4">
           <%= @inner_content %>
         </div>
       </div>
