@@ -9,12 +9,10 @@ defmodule YailWeb.PageLive do
 
   alias Phoenix.Socket.Broadcast
   alias Yail.LiveMonitor
-  alias Yail.Session.{Artist, Playback, Room, Track}
+  alias Yail.Session.{Room, Session, Track}
   alias YailWeb.Presence
 
   require Logger
-
-  @playback_update_interval :timer.seconds(1)
 
   def room(room_id), do: "room:#{room_id}"
   def views_count(room_id), do: length(Map.keys(Presence.list(room(room_id))))
@@ -32,8 +30,7 @@ defmodule YailWeb.PageLive do
       YailWeb.Endpoint.subscribe(room(room_id))
 
       if session["room_id"] == room_id do
-        send(self(), :update)
-        :timer.send_interval(@playback_update_interval, self(), :update)
+        GenServer.call(Session, {:add, room_id})
       end
     end
 
@@ -248,61 +245,6 @@ defmodule YailWeb.PageLive do
   @impl true
   def handle_info(%Broadcast{event: "add", payload: track}, %{assigns: %{queue: queue}} = socket) do
     {:noreply, assign(socket, :queue, queue ++ [track])}
-  end
-
-  @impl true
-  def handle_info(:update, %{assigns: %{room_id: room_id}} = socket) do
-    socket =
-      case Spotify.Player.get_current_playback(get_credentials(socket)) do
-        {:ok, %{"error" => %{"status" => 401}}} ->
-          socket
-          |> put_flash(:warn, "Token expired")
-          |> redirect(to: "/auth/spotify")
-
-        {:ok, %{"error" => %{"message" => message}}} ->
-          put_flash(socket, :error, message)
-
-        {:ok,
-         %{
-           is_playing: is_playing,
-           item: %{
-             uri: uri,
-             name: name,
-             album: %{"images" => images},
-             artists: [%{"uri" => artist_uri, "name" => artist_name} | _]
-           }
-         }} ->
-          image = Enum.find(images, &(&1["height"] == 300)) || hd(images)
-
-          assign(socket, %{
-            is_playing: is_playing,
-            playback: %Playback{
-              track: %Track{
-                uri: uri,
-                name: name,
-                preview: image["url"]
-              },
-              artist: %Artist{
-                uri: artist_uri,
-                name: artist_name
-              }
-            }
-          })
-
-        :ok ->
-          assign(socket, %{
-            is_playing: false,
-            playback: nil
-          })
-
-        {:ok, %{is_playing: is_playing}} ->
-          assign(socket, :is_playing, is_playing)
-      end
-
-    state = Map.take(socket.assigns, [:is_playing, :playback, :views])
-    YailWeb.Endpoint.broadcast!(room(room_id), "update", state)
-
-    {:noreply, socket}
   end
 
   @spec search(

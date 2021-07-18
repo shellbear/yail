@@ -14,6 +14,7 @@ defmodule Yail.Application do
       # Start the Endpoint (http/https)
       YailWeb.Endpoint,
       YailWeb.Presence,
+      Yail.Session.Session,
       # Start a worker by calling: Yail.Worker.start_link(arg)
       # {Yail.Worker, arg}
       {Cachex, name: :yail},
